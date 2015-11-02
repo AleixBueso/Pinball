@@ -21,19 +21,14 @@ public:
 
 public:
 
-	uint lives = 3;
-	uint score = 000000000;
-
 	p2List<PhysBody*> circles;
 	p2List<PhysBody*> pinball;
 	
-	PhysBody* ball;
 	PhysBody* sensor;
 	bool sensed;
 
-
 	SDL_Texture* circle;
-	SDL_Texture* ball_texture;
+
 	SDL_Texture* PinballMap;
 
 	uint bonus_fx;

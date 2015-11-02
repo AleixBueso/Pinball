@@ -16,8 +16,9 @@
 class PhysBody
 {
 public:
-	PhysBody() : body(NULL)
-	{}
+
+	PhysBody();
+	~PhysBody();
 
 	void GetPosition(int& x, int &y) const;
 	void SetPosition(int x, int y);
@@ -32,13 +33,16 @@ public:
 public:
 	int width, height;
 	b2Body* body;
+	Module* listener;
+	SDL_Rect rect;
+	b2BodyType type;
 	// TODO 6: Add a pointer to a module that might want to listen to a collision from this body
 };
 
 // Module --------------------------------------
 // TODO 3: Make module physics inherit from b2ContactListener
 // then override void BeginContact(b2Contact* contact)
-class ModulePhysics : public Module
+class ModulePhysics : public Module, public b2ContactListener
 {
 public:
 	ModulePhysics(Application* app, bool start_enabled = true);
@@ -52,11 +56,16 @@ public:
 	PhysBody* CreateCircle(int x, int y, int radius, b2BodyType type);
 	PhysBody* CreateRectangle(int x, int y, int width, int height);
 	PhysBody* CreateRectangleSensor(int x, int y, int width, int height);
+	PhysBody* CreatePolygon(const SDL_Rect& rect, int* points, uint count, b2BodyType type, float density, float restitution, bool isSensor);
 	PhysBody* CreateChain(int x, int y, int* points, int size);
 	PhysBody* CreatePinballChain(int x, int y, int* points, int size);
+
+	void CreateRevoluteJoint(PhysBody* body_1, PhysBody* body_2, int x_pivot_1 = 0, int y_pivot_1 = 0, int x_pivot_2 = 0, int y_pivot_2 = 0, int max_angle = INT_MAX, int min_angle = INT_MIN);
+	void CreateLineJoint(PhysBody* body_1, PhysBody* body_2, int x_pivot_1 = 0, int y_pivot_1 = 0, int x_pivot_2 = 0, int y_pivot_2 = 0, float frequency = 15.0f, float damping = 0.5f);
 
 private:
 
 	bool debug;
+	p2List<PhysBody*> bodies;
 	b2World* world;
 };

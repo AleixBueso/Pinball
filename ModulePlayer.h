@@ -1,7 +1,15 @@
 #pragma once
 #include "Module.h"
+#include "ModuleTextures.h"
 #include "Globals.h"
 #include "p2Point.h"
+
+struct Object
+{
+	Object(){ body = NULL; texture = NULL; }
+	PhysBody* body;
+	SDL_Texture* texture;
+};
 
 class ModulePlayer : public Module
 {
@@ -14,5 +22,15 @@ public:
 	bool CleanUp();
 
 public:
+	uint push_value = 0;
+	uint lives = 3;
+	uint score = 000000000;
+	Object Ball;
+	Object r_flipper;
+	Object l_flipper;
+	Object pusher;
 
+	PhysBody* r_flipper_anchor;
+	PhysBody* l_flipper_anchor;
+	PhysBody* pusher_anchor;
 };

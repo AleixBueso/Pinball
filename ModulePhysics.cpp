@@ -5,7 +5,7 @@
 #include "ModulePhysics.h"
 #include "ModuleSceneIntro.h"
 #include "p2Point.h"
-#include "math.h"
+#include <math.h>
 
 #ifdef _DEBUG
 #pragma comment( lib, "Box2D/libx86/Debug/Box2D.lib" )
@@ -49,6 +49,22 @@ update_status ModulePhysics::PreUpdate()
 	return UPDATE_CONTINUE;
 }
 
+PhysBody::PhysBody()
+{
+	body = NULL;
+	listener = NULL;
+	rect.x = rect.y = rect.h = rect.w = width = height = 0;
+	type = b2_dynamicBody;
+
+}
+
+PhysBody::~PhysBody()
+{
+	body->GetWorld()->DestroyBody(body);
+	body = NULL;
+	listener = NULL;
+}
+
 PhysBody* ModulePhysics::CreateCircle(int x, int y, int radius, b2BodyType type)
 {
 	b2BodyDef body;
@@ -62,7 +78,6 @@ PhysBody* ModulePhysics::CreateCircle(int x, int y, int radius, b2BodyType type)
 	b2FixtureDef fixture;
 	fixture.shape = &shape;
 	fixture.density = 1.0f;
-	fixture.restitution = 1.0f;
 
 	b->CreateFixture(&fixture);
 
@@ -96,6 +111,50 @@ PhysBody* ModulePhysics::CreateRectangle(int x, int y, int width, int height)
 	pbody->height = height * 0.5f;
 
 	return pbody;
+}
+
+PhysBody* ModulePhysics::CreatePolygon(const SDL_Rect& rect, int* points, uint count, b2BodyType type, float density, float restitution, bool isSensor)
+{
+	b2BodyDef body;
+
+	body.position.Set(PIXEL_TO_METERS(rect.x), PIXEL_TO_METERS(rect.y));
+	body.angle = 0.0f;
+	body.type = type;
+
+	b2Body* b = world->CreateBody(&body);
+
+	b2PolygonShape shape;
+	b2Vec2* p = new b2Vec2[count / 2];
+	for (uint i = 0; i < count / 2; ++i)
+	{
+		p[i].x = PIXEL_TO_METERS(points[i * 2 + 0]);
+		p[i].y = PIXEL_TO_METERS(points[i * 2 + 1]);
+	}
+
+	shape.Set(p, count / 2);
+
+	b2FixtureDef box_fixture;
+	box_fixture.shape = &shape;
+	box_fixture.density = density;
+	box_fixture.restitution = restitution;
+	box_fixture.isSensor = isSensor;
+
+	b->CreateFixture(&box_fixture);
+
+	PhysBody* ret = new PhysBody();
+	ret->body = b;
+	ret->rect.x = rect.x;
+	ret->rect.y = rect.y;
+	ret->rect.w = rect.w;
+	ret->rect.h = rect.h;
+	
+	bodies.add(ret);
+
+	delete[] p;
+
+	b->SetUserData(ret);
+
+	return ret;
 }
 
 PhysBody* ModulePhysics::CreateChain(int x, int y, int* points, int size)
@@ -312,6 +371,42 @@ int PhysBody::RayCast(int x1, int y1, int x2, int y2, float& normal_x, float& no
 	int ret = -1;
 
 	return ret;
+}
+
+void ModulePhysics::CreateRevoluteJoint(PhysBody* body_1, PhysBody* body_2, int x_pivot_1, int y_pivot_1, int x_pivot_2, int y_pivot_2, int max_angle, int min_angle)
+{
+	b2RevoluteJointDef def;
+
+	def.bodyA = body_1->body;
+	def.bodyB = body_2->body;
+
+	def.localAnchorA.Set(PIXEL_TO_METERS(x_pivot_1), PIXEL_TO_METERS(y_pivot_1));
+	def.localAnchorB.Set(PIXEL_TO_METERS(x_pivot_2), PIXEL_TO_METERS(y_pivot_2));
+
+	if (max_angle != INT_MAX && min_angle != INT_MIN)
+	{
+		def.enableLimit = true;
+		def.upperAngle = DEGTORAD * max_angle;
+		def.lowerAngle = DEGTORAD * min_angle;
+	}
+
+	world->CreateJoint(&def);
+}
+
+void ModulePhysics::CreateLineJoint(PhysBody* body_1, PhysBody* body_2, int x_pivot_1, int y_pivot_1, int x_pivot_2, int y_pivot_2, float frequency, float damping)
+{
+	b2DistanceJointDef def;
+
+	def.bodyA = body_1->body;
+	def.bodyB = body_2->body;
+
+	def.localAnchorA.Set(PIXEL_TO_METERS(x_pivot_1), PIXEL_TO_METERS(y_pivot_1));
+	def.localAnchorB.Set(PIXEL_TO_METERS(x_pivot_2), PIXEL_TO_METERS(y_pivot_2));
+
+	def.dampingRatio = damping; // 0 ... 1
+	def.frequencyHz = frequency; // < 30.0f
+
+	world->CreateJoint(&def);
 }
 
 // TODO 3
