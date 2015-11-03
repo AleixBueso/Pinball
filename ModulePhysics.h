@@ -53,15 +53,21 @@ public:
 	update_status PostUpdate();
 	bool CleanUp();
 
-	PhysBody* CreateCircle(int x, int y, int radius, b2BodyType type);
-	PhysBody* CreateRectangle(int x, int y, int width, int height);
+	PhysBody* CreateCircle(int x, int y, int radius, b2BodyType type, float restitution = 0.0f);
+	PhysBody* CreateRectangle(int x, int y, int width, int height, float restitution, b2BodyType type);
 	PhysBody* CreateRectangleSensor(int x, int y, int width, int height);
 	PhysBody* CreatePolygon(const SDL_Rect& rect, int* points, uint count, b2BodyType type, float density, float restitution, bool isSensor);
 	PhysBody* CreateChain(int x, int y, int* points, int size);
-	PhysBody* CreatePinballChain(int x, int y, int* points, int size);
+	PhysBody* CreatePinballChain(int x, int y, int* points, int size, float restitution = 0.0f);
 
 	void CreateRevoluteJoint(PhysBody* body_1, PhysBody* body_2, int x_pivot_1 = 0, int y_pivot_1 = 0, int x_pivot_2 = 0, int y_pivot_2 = 0, int max_angle = INT_MAX, int min_angle = INT_MIN);
 	void CreateLineJoint(PhysBody* body_1, PhysBody* body_2, int x_pivot_1 = 0, int y_pivot_1 = 0, int x_pivot_2 = 0, int y_pivot_2 = 0, float frequency = 15.0f, float damping = 0.5f);
+
+	void BeginContact(b2Contact* contact);
+	void EndContact(b2Contact* contact);
+
+	//void PreSolve(b2Contact* contact, const b2Manifold* oldManifold);
+	//void PostSolve(b2Contact* contact, const b2ContactImpulse* impulse);
 
 private:
 

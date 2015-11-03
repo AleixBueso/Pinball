@@ -11,7 +11,6 @@
 
 ModuleSceneIntro::ModuleSceneIntro(Application* app, bool start_enabled) : Module(app, start_enabled)
 {
-	circle = NULL;
 	ray_on = false;
 	sensed = false;
 }
@@ -27,7 +26,6 @@ bool ModuleSceneIntro::Start()
 
 	App->renderer->camera.x = App->renderer->camera.y = 0;
 
-	circle = App->textures->Load("pinball/wheel.png");
 	bonus_fx = App->audio->LoadFx("pinball/bonus.wav");
 	PinballMap = App->textures->Load("pinball/bluetable_base.png");
 
@@ -74,18 +72,7 @@ update_status ModuleSceneIntro::Update()
 
 	fVector normal(0.0f, 0.0f);*/
 
-	// All draw functions ------------------------------------------------------
-	p2List_item<PhysBody*>* c = circles.getFirst();
-
-	while(c != NULL)
-	{
-		int x, y;
-		c->data->GetPosition(x, y);
-		if(c->data->Contains(App->input->GetMouseX(), App->input->GetMouseY()))
-			App->renderer->Blit(circle, x, y, NULL, 1.0f, c->data->GetRotation());
-		c = c->next;
-	}
-
+	
 	App->renderer->Blit(PinballMap, 0, 0);
 
 	return UPDATE_CONTINUE;
@@ -242,9 +229,35 @@ void ModuleSceneIntro::CreatePinball()
 		325, 144
 	};
 	pinball.add(App->physics->CreatePinballChain(0, 0, bar2, 8));
-	pinball.add(App->physics->CreateCircle(215, 255, 40, b2_staticBody));
-	pinball.add(App->physics->CreateCircle(291, 191, 40, b2_staticBody));
-	pinball.add(App->physics->CreateCircle(368, 255, 40, b2_staticBody));
+
+	pinball.add(App->physics->CreateRectangle(160, 373, 36, 55, 1.2f, b2_staticBody));
+	pinball.add(App->physics->CreateRectangle(430, 373, 40, 57, 1.2f, b2_staticBody));
+
+	//PsyDuck
+	pinball.add(App->physics->CreateCircle(498, 644, 65, b2_staticBody, 1.0f));
+
+	
+	int boucing_rectangle_1[8] = {
+		134, 761,
+		142, 759,
+		183, 836,
+		172, 837
+	};
+	pinball.add(App->physics->CreatePinballChain(0, 0, boucing_rectangle_1, 8, 1.0f));
+
+	int boucing_rectangle_2[8] = {
+		446, 763,
+		436, 760,
+		401, 830,
+		409, 832
+	};
+	pinball.add(App->physics->CreatePinballChain(0, 0, boucing_rectangle_2, 8, 1.0f));
+
+	//Shellders
+	shellders.add(App->physics->CreateCircle(215, 255, 40, b2_staticBody, 1.0f));
+	shellders.add(App->physics->CreateCircle(291, 191, 40, b2_staticBody, 1.0f));
+	shellders.add(App->physics->CreateCircle(368, 255, 40, b2_staticBody, 1.0f));
+	shellders.add(App->physics->CreateCircle(292, 990, 5, b2_staticBody, 1.0f));
 }
 
 // TODO 8: Now just define collision callback for the circle and play bonus_fx audio

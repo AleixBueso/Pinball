@@ -22,12 +22,12 @@ public:
 public:
 
 	p2List<PhysBody*> circles;
+	p2List<PhysBody*> shellders;
 	p2List<PhysBody*> pinball;
 	
+	PhysBody* PsyDuck;
 	PhysBody* sensor;
 	bool sensed;
-
-	SDL_Texture* circle;
 
 	SDL_Texture* PinballMap;
 

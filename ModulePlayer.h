@@ -6,9 +6,12 @@
 
 struct Object
 {
-	Object(){ body = NULL; texture = NULL; }
+	Object(){ body = NULL; texture = NULL; m_contacting = false; }
 	PhysBody* body;
 	SDL_Texture* texture;
+	bool m_contacting;
+	void startContact(){ m_contacting = true; }
+	void endContact(){ m_contacting = false; }
 };
 
 class ModulePlayer : public Module

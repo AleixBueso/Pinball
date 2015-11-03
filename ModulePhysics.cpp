@@ -5,6 +5,7 @@
 #include "ModulePhysics.h"
 #include "ModuleSceneIntro.h"
 #include "p2Point.h"
+#include "ModulePlayer.h"
 #include <math.h>
 
 #ifdef _DEBUG
@@ -65,7 +66,7 @@ PhysBody::~PhysBody()
 	listener = NULL;
 }
 
-PhysBody* ModulePhysics::CreateCircle(int x, int y, int radius, b2BodyType type)
+PhysBody* ModulePhysics::CreateCircle(int x, int y, int radius, b2BodyType type, float restitution)
 {
 	b2BodyDef body;
 	body.type = type;
@@ -78,6 +79,7 @@ PhysBody* ModulePhysics::CreateCircle(int x, int y, int radius, b2BodyType type)
 	b2FixtureDef fixture;
 	fixture.shape = &shape;
 	fixture.density = 1.0f;
+	fixture.restitution = restitution;
 
 	b->CreateFixture(&fixture);
 
@@ -89,10 +91,10 @@ PhysBody* ModulePhysics::CreateCircle(int x, int y, int radius, b2BodyType type)
 	return pbody;
 }
 
-PhysBody* ModulePhysics::CreateRectangle(int x, int y, int width, int height)
+PhysBody* ModulePhysics::CreateRectangle(int x, int y, int width, int height, float restitution, b2BodyType type)
 {
 	b2BodyDef body;
-	body.type = b2_dynamicBody;
+	body.type = type;
 	body.position.Set(PIXEL_TO_METERS(x), PIXEL_TO_METERS(y));
 
 	b2Body* b = world->CreateBody(&body);
@@ -102,6 +104,7 @@ PhysBody* ModulePhysics::CreateRectangle(int x, int y, int width, int height)
 	b2FixtureDef fixture;
 	fixture.shape = &box;
 	fixture.density = 1.0f;
+	fixture.restitution = restitution;
 
 	b->CreateFixture(&fixture);
 
@@ -140,6 +143,9 @@ PhysBody* ModulePhysics::CreatePolygon(const SDL_Rect& rect, int* points, uint c
 	box_fixture.isSensor = isSensor;
 
 	b->CreateFixture(&box_fixture);
+
+	b2ChainShape chain;
+	chain.CreateChain(p, count / 2);
 
 	PhysBody* ret = new PhysBody();
 	ret->body = b;
@@ -190,7 +196,7 @@ PhysBody* ModulePhysics::CreateChain(int x, int y, int* points, int size)
 	return pbody;
 }
 
-PhysBody* ModulePhysics::CreatePinballChain(int x, int y, int* points, int size)
+PhysBody* ModulePhysics::CreatePinballChain(int x, int y, int* points, int size, float restitution)
 {
 	b2BodyDef body;
 	body.type = b2_staticBody;
@@ -211,6 +217,7 @@ PhysBody* ModulePhysics::CreatePinballChain(int x, int y, int* points, int size)
 
 	b2FixtureDef fixture;
 	fixture.shape = &shape;
+	fixture.restitution = restitution;
 
 	b->CreateFixture(&fixture);
 
@@ -383,6 +390,8 @@ void ModulePhysics::CreateRevoluteJoint(PhysBody* body_1, PhysBody* body_2, int 
 	def.localAnchorA.Set(PIXEL_TO_METERS(x_pivot_1), PIXEL_TO_METERS(y_pivot_1));
 	def.localAnchorB.Set(PIXEL_TO_METERS(x_pivot_2), PIXEL_TO_METERS(y_pivot_2));
 
+	def.collideConnected = false;
+
 	if (max_angle != INT_MAX && min_angle != INT_MIN)
 	{
 		def.enableLimit = true;
@@ -407,6 +416,33 @@ void ModulePhysics::CreateLineJoint(PhysBody* body_1, PhysBody* body_2, int x_pi
 	def.frequencyHz = frequency; // < 30.0f
 
 	world->CreateJoint(&def);
+}
+
+void ModulePhysics::BeginContact(b2Contact* contact) {
+
+	//check if fixture A was a ball
+	void* bodyUserData = contact->GetFixtureA()->GetBody()->GetUserData();
+	if (bodyUserData)
+		static_cast<Object*>(bodyUserData)->startContact();
+
+	//check if fixture B was a ball
+	bodyUserData = contact->GetFixtureB()->GetBody()->GetUserData();
+	if (bodyUserData)
+		static_cast<Object*>(bodyUserData)->startContact();
+}
+
+void ModulePhysics::EndContact(b2Contact* contact) {
+
+	//check if fixture A was a ball
+	void* bodyUserData = contact->GetFixtureA()->GetBody()->GetUserData();
+	if (bodyUserData)
+		static_cast<Object*>(bodyUserData)->endContact();
+
+	//check if fixture B was a ball
+	bodyUserData = contact->GetFixtureB()->GetBody()->GetUserData();
+	if (bodyUserData)
+		static_cast<Object*>(bodyUserData)->endContact();
+
 }
 
 // TODO 3
